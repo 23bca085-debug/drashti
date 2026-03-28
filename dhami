@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFF700">
+    <title>Dhamisday - Lemon & Chili</title>
+    
+    <!-- PWA Manifest Link (Data URI) -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkRoYW1pc2RheSIsCiAgInNob3J0X25hbWUiIjogIkRoYW1pc2RheSIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAmZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjRkZGNzAwIiwKICAidGhlbWVfY29sb3IiIjogIiNGRkY3MDAiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2ltZy5pY29uczhvcmcuY29tL2ZsdWVuY3kvc2VjdGlvbi81MTIvaG90LWNoaWxpLXBlcHBlci5wbmciLAogICAgICAic2l6ZXMiIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Permanent+Marker&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lemon: #FFF700;
+            --chili: #FF2400;
+            --barrio-black: #1A1A1A;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--lemon);
+            color: var(--barrio-black);
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .safe-padding {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .font-barrio { font-family: 'Rubik Dirt', cursive; }
+        .font-marker { font-family: 'Permanent Marker', cursive; }
+        .chili-red { color: var(--chili); }
+        
+        .sticker {
+            background: white;
+            border: 3px solid var(--barrio-black);
+            box-shadow: 4px 4px 0px var(--chili);
+            transform: rotate(-1deg);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .sticker:active {
+            transform: scale(0.98) rotate(0deg);
+            box-shadow: 2px 2px 0px var(--chili);
+        }
+
+        .vine-line {
+            position: absolute; left: 20px; top: 0; bottom: 0; width: 6px;
+            background: repeating-linear-gradient(var(--chili), var(--chili) 10px, transparent 10px, transparent 20px);
+        }
+
+        @keyframes sizzle {
+            0% { transform: translate(0,0) rotate(-1deg); }
+            50% { transform: translate(1px, 1px) rotate(1deg); }
+            100% { transform: translate(0,0) rotate(-1deg); }
+        }
+
+        .alarm-active { animation: sizzle 0.1s infinite; border: 8px solid var(--chili) !important; }
+
+        .wall-texture {
+            background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');
+            background-color: #f3f3f3;
+            min-height: 350px;
+        }
+
+        .graffiti-text {
+            font-family: 'Permanent Marker', cursive;
+            color: var(--chili);
+            line-height: 1.2;
+        }
+
+        .nav-active { color: var(--chili); transform: scale(1.1); font-weight: 900; }
+
+        .chili-check {
+            width: 28px; height: 28px; border: 3px solid var(--barrio-black);
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background: white;
+        }
+
+        .chili-check.done { background-color: var(--chili); border-color: var(--chili); }
+
+        /* Smooth transitions */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+    </style>
+</head>
+<body class="safe-padding">
+
+    <div id="app" class="max-w-md mx-auto min-h-screen relative flex flex-col">
+        
+        <!-- HEADER -->
+        <header class="p-6 pb-2 flex justify-between items-center">
+            <div @click="view = 'schedule'" class="cursor-pointer">
+                <h1 class="font-barrio text-4xl chili-red -rotate-2 drop-shadow-sm">DHAMISDAY</h1>
+                <p class="text-[10px] font-black uppercase tracking-widest">Version 3.0 • Premium</p>
+            </div>
+            <div class="flex gap-2">
+                <button @click="resetData" class="text-[10px] font-bold border-2 border-black px-2 py-1 rounded bg-white active:bg-gray-100">RESET</button>
+                <div class="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center bg-white shadow active:scale-90" @click="addStreak">
+                    <span class="text-xl">🍋</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- VIEWS CONTAINER -->
+        <main class="flex-1 overflow-y-auto px-6 pb-32">
+            
+            <!-- VIEW: THE VINE (SCHEDULE) -->
+            <section v-if="view === 'schedule'" class="mt-4">
+                <!-- Quick Stats Card -->
+                <div class="bg-black text-white p-4 rounded-2xl mb-8 flex justify-between items-center border-4 border-yellow-400">
+                    <div>
+                        <p class="text-[10px] font-bold text-yellow-400 uppercase">Current Heat</p>
+                        <p class="font-barrio text-2xl">{{ streak*20 }}% POWER</p>
+                    </div>
+                    <div class="flex gap-1">
+                        <span v-for="n in 5" :key="n" class="text-lg transition-opacity" :class="n <= streak ? 'opacity-100' : 'opacity-20'">🌶️</span>
+                    </div>
+                </div>
+
+                <!-- Time Vine -->
+                <div class="relative pl-12 border-l-0">
+                    <div class="vine-line"></div>
+                    <div v-for="block in timeBlocks" :key="block.id" class="mb-8 relative">
+                        <div class="absolute -left-12 top-4 font-black text-[10px] bg-black text-white px-1">{{ block.time }}</div>
+                        <div :class="['sticker p-4 rounded-xl cursor-pointer', block.isHot ? 'bg-black text-white' : 'bg-white']" @click="triggerAlarm(block.title)">
+                            <div class="flex justify-between items-center">
+                                <h3 :class="[block.isHot ? 'font-barrio text-lg' : 'font-marker text-md', block.isHot ? 'text-yellow-400' : 'chili-red']">
+                                    {{ block.title }}
+                                </h3>
+                                <span v-if="block.isHot">🔥</span>
+                            </div>
+                            <p class="text-[10px] mt-1 font-bold uppercase opacity-70">{{ block.desc }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hot List -->
+                <div class="mt-10">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="font-barrio text-2xl chili-red">HOT LIST</h2>
+                        <span class="text-[10px] font-bold bg-white border border-black px-2 rounded-full">{{ tasks.filter(t => !t.done).length }} REMAINING</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div v-for="task in tasks" :key="task.id" class="sticker flex items-center p-4 gap-4" :style="{ borderLeft: `8px solid ${task.done ? '#ccc' : task.color}` }">
+                            <div class="chili-check rounded-md transition-all" :class="{ 'done': task.done }" @click="task.done = !task.done; saveTasks()">
+                                <span v-if="task.done" class="text-white text-xs font-black">✓</span>
+                            </div>
+                            <div class="flex-1" @click="task.done = !task.done; saveTasks()">
+                                <p class="font-bold text-sm leading-tight" :class="{ 'line-through opacity-40': task.done }">{{ task.title }}</p>
+                            </div>
+                            <button @click="deleteTask(task.id)" class="text-xs font-black p-2 opacity-30 hover:opacity-100">✕</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: THE WALL (JOURNAL) -->
+            <section v-if="view === 'journal'" class="mt-4 flex flex-col h-full">
+                <h2 class="font-barrio text-3xl chili-red mb-4">THE WALL</h2>
+                <div class="wall-texture border-4 border-black p-6 rounded-3xl shadow-xl flex-1 flex flex-col">
+                    <textarea 
+                        class="bg-transparent w-full flex-1 graffiti-text text-2xl focus:outline-none placeholder:opacity-20 resize-none"
+                        placeholder="TAP TO TAG YOUR DAY..."
+                        v-model="journalText"
+                    ></textarea>
+                    <button class="mt-4 bg-black text-white w-full py-4 rounded-2xl font-barrio text-xl border-2 border-yellow-400 shadow-lg active:scale-95" @click="saveTag">
+                        POST TAG
+                    </button>
+                </div>
+                <div class="mt-6 p-4 bg-white border-2 border-black rounded-2xl shadow-sm">
+                    <p class="text-[10px] font-black uppercase text-center mb-2">Recent Vibes</p>
+                    <div class="flex justify-around">
+                        <span class="text-2xl grayscale hover:grayscale-0 cursor-pointer">🍋</span>
+                        <span class="text-2xl grayscale hover:grayscale-0 cursor-pointer">🔥</span>
+                        <span class="text-2xl grayscale hover:grayscale-0 cursor-pointer">🌶️</span>
+                        <span class="text-2xl grayscale hover:grayscale-0 cursor-pointer">⚡</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ALARM MODAL -->
+        <transition name="fade">
+            <div v-if="activeAlarm" class="fixed inset-0 z-[100] bg-red-600 flex flex-col items-center justify-center p-8 alarm-active">
+                <h2 class="font-barrio text-5xl text-white text-center mb-6">TIME TO SIZZLE!</h2>
+                <div class="bg-yellow-400 p-10 rounded-full border-8 border-black mb-10 shadow-2xl animate-bounce">
+                    <span class="text-8xl">🌶️</span>
+                </div>
+                <p class="font-marker text-3xl text-white mb-12 text-center uppercase tracking-tighter">{{ activeAlarm }}</p>
+                <button @click="stopAlarm" class="bg-white text-black font-barrio text-3xl px-16 py-6 rounded-2xl border-4 border-black shadow-[8px_8px_0px_#000] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
+                    I'M READY
+                </button>
+            </div>
+        </transition>
+
+        <!-- ADD TASK BUTTON -->
+        <button @click="addTask" class="fixed bottom-28 right-6 w-16 h-16 bg-black text-white rounded-full border-4 border-white shadow-xl flex items-center justify-center text-4xl z-[60] active:scale-90 transition-transform">
+            <span class="pb-1">+</span>
+        </button>
+
+        <!-- BOTTOM NAV -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-black flex justify-around items-center h-24 z-[70] shadow-2xl">
+            <div @click="view = 'schedule'" :class="['flex flex-col items-center flex-1 py-4', view === 'schedule' ? 'nav-active' : 'opacity-40']">
+                <span class="text-2xl">📅</span>
+                <span class="text-[9px] font-black uppercase mt-1">THE VINE</span>
+            </div>
+            <div @click="view = 'journal'" :class="['flex flex-col items-center flex-1 py-4', view === 'journal' ? 'nav-active' : 'opacity-40']">
+                <span class="text-2xl">🎨</span>
+                <span class="text-[9px] font-black uppercase mt-1">THE WALL</span>
+            </div>
+        </nav>
+
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const view = ref('schedule');
+                const streak = ref(Number(localStorage.getItem('dhamisday_streak')) || 1);
+                const activeAlarm = ref(null);
+                const journalText = ref(localStorage.getItem('dhamisday_journal') || '');
+
+                const timeBlocks = ref([
+                    { id: 1, time: '07:30', title: 'Wake & Zest', desc: 'Hydrate & Move', isHot: false },
+                    { id: 2, time: '09:00', title: 'The Grind', desc: 'Focus Block 1', isHot: true },
+                    { id: 3, time: '13:00', title: 'Cool Down', desc: 'Lunch & Break', isHot: false },
+                    { id: 4, time: '14:30', title: 'Final Heat', desc: 'Admin Tasks', isHot: true }
+                ]);
+
+                const tasks = ref(JSON.parse(localStorage.getItem('dhamisday_tasks')) || [
+                    { id: 1, title: 'Drink Lemon Water', priority: 1, color: '#4ADE80', done: false },
+                    { id: 2, title: 'Burn through Inbox', priority: 3, color: '#FF2400', done: false }
+                ]);
+
+                const saveTasks = () => localStorage.setItem('dhamisday_tasks', JSON.stringify(tasks.value));
+                
+                const saveTag = () => {
+                    localStorage.setItem('dhamisday_journal', journalText.value);
+                    alert("TAG POSTED! 🔥");
+                };
+
+                const triggerAlarm = (title) => {
+                    if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100, 50, 300]);
+                    activeAlarm.value = title;
+                };
+
+                const stopAlarm = () => activeAlarm.value = null;
+
+                const addTask = () => {
+                    const title = prompt("ENTER NEW TASK:");
+                    if (title) {
+                        tasks.value.unshift({
+                            id: Date.now(),
+                            title: title,
+                            priority: 2,
+                            color: '#FF2400',
+                            done: false
+                        });
+                        saveTasks();
+                    }
+                };
+
+                const deleteTask = (id) => {
+                    tasks.value = tasks.value.filter(t => t.id !== id);
+                    saveTasks();
+                };
+
+                const addStreak = () => {
+                    streak.value = streak.value < 5 ? streak.value + 1 : 1;
+                    localStorage.setItem('dhamisday_streak', streak.value);
+                };
+
+                const resetData = () => {
+                    if(confirm("Wipe all data?")) {
+                        localStorage.clear();
+                        location.reload();
+                    }
+                };
+
+                return {
+                    view, streak, timeBlocks, tasks, activeAlarm, journalText,
+                    triggerAlarm, stopAlarm, addTask, saveTag, deleteTask, addStreak, saveTasks, resetData
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
